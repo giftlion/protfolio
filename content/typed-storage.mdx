@@ -1,156 +1,132 @@
 ---
-title: Typed Storage
-description: iv created a new lib named typed-storage heres how it works
+title: Typed Storage - A Type-Safe Local Storage Library
+description: Introducing Typed Storage, a new library providing a type-safe API for local storage, inspired by tRPC.
 date: 2025-10-23
 published: true
 ---
 
-## Why?
+## Why Typed Storage?
 
-Foe a while i wanted to learn how to create a type-safe api like [`trpc`](https://trpc.io/) etc it always make
-me facinating to see the type safe complition when you type the and then the type of your
-http request so i decided to create a similar api for using local storage.
+For some time, I've been fascinated by the developer experience offered by type-safe APIs like tRPC. The seamless type completion and compile-time checks for HTTP requests are incredibly powerful. This inspired me to create a similar type-safe API, but for a different domain: localStorage. Thus, Typed Storage was born. It aims to bring the same level of type safety and developer comfort to your client-side data persistence.
 
-## How it work
+## How it Works
 
-### Initiating the instance
-Well i knew that the first think i need to create a type-safe expirience is to define a schema
-and i didnt want to invent a new one so i decided to use the zod schema because every one already using
-it.
+Typed Storage leverages zod schemas to define the structure and types of your stored data, offering a robust and familiar way to ensure data integrity.
 
-```js {4} showLineNumbers
+Initiating the Client
+
+The first step to a type-safe experience is defining your data schema. To avoid inventing a new schema language, Typed Storage integrates with zod, a widely adopted and powerful schema validation library.
+
+```ts
 import { createClient } from "@giftlion/typed-storage";
 import { z } from "zod";
 
+// Define your data schema using Zod
 const schema = z.object({
   users: z.object({
     id: z.number(),
     name: z.string(),
     email: z.string(),
-    products: z.array(z.string()).optional(),
+  }),
+  // You can define other top-level keys here
+  settings: z.object({
+    theme: z.enum(["light", "dark"]),
+    notifications: z.boolean().default(true),
   }),
 });
 
-const localStorage = createClient("my-sorage", { schema });
+// Create your Typed Storage client instance
+// The first argument is a unique namespace for your storage instance.
+const typedStorage = createClient("my-app-storage", { schema });
 ```
 
-the first argumet its just a uniqe string it you want to create more instaces.
+The first argument to createClient is a unique string that acts as a namespace for your storage instance, allowing you to manage multiple distinct storage areas if needed.
 
-### Crud
+## CRUD Operations
 
-and thats pretty mush all the cong you have to do right know you can just use it
-
-```typescript twoslash
-// @errors: 2540
-
-// Insert
-db.users.insert({ id: 1, name: "Alice", email: "alice@example.com" });
-
-// Query all
-const { data: users } = db.users.query();
-//             ^|
-
-// Query with filter
-const { data: activeUsers } = db.users
-  .query()
-  .where((user) => user.id > 10);
-
-// Query with select
-const { data: emails } = db.users
-  .query()
-  .select({ email: true });
-
-// Chain where and select
-const { data: filtered } = db.users
-  .query()
-  .where((user) => user.name.includes("Alice"))
-  .select({ name: true, email: true });
-
-// Update
-db.users.update().where((user) => user.id === 1, { name: "Alice Updated" });
-
-// Delete
-db.users.delete().where((user) => user.id === 1);
-```
-
-### Type Safety & Error Handling
+With the client initialized, you can now perform Create, Read, Update, and Delete (CRUD) operations with full type safety and auto-completion.
 
 ```ts
-// TypeScript will catch type mismatches
-db.users.insert({ 
-  id: "not-a-number", // ❌ Error: Type 'string' is not assignable to type 'number'
-  name: "Alice", 
-  email: "alice@example.com" 
-});
-
-// ✅ Correct usage
-db.users.insert({ 
-  id: 1, // ✅ Correct: number type
-  name: "Alice", 
-  email: "alice@example.com" 
-});
-```
-
-### Type Safety Examples
-
-```ts
-// Type-safe queries
-const users = db.users.query();
-const filtered = db.users.query().where((user) => user.id > 5);
-const selected = db.users.query().select({ name: true, email: true });
-```
-
-### Valid Usage
-
-```ts
-// ✅ Correct usage with full type safety
-const validUser = {
+// Insert a new user
+await typedStorage.users.insert({
   id: 1,
   name: "Alice",
-  email: "alice@example.com"
-};
+  email: "alice@example.com",
+});
 
-// Type-safe query with method chaining
-const result = db.users
+// Query all users
+const { data: allUsers } = await typedStorage.users.query();
+
+// Query users with a filter (e.g., id greater than 10)
+const { data: activeUsers } = await typedStorage.users
+  .query()
+  .where((user) => user.id > 10);
+console.log("Active Users (ID > 10):", activeUsers);
+
+// Query users and select only specific fields (e.g., email)
+const { data: userEmails } = await typedStorage.users
+  .query()
+  .select({ email: true });
+// type userEmails = { email:string }[]
+
+// Chain 'where' and 'select' for more complex queries
+const { data: filteredNamesAndEmails } = await typedStorage.users
   .query()
   .where((user) => user.name.includes("Alice"))
   .select({ name: true, email: true });
+// type filteredNamesAndEmails = { name: true, email: true }[]
+
+// Update a user's name
+await typedStorage.users
+  .update()
+  .where((user) => user.id === 1, { name: "Alice Updated" });
+
+// Delete a user
+await typedStorage.users.delete().where((user) => user.id === 1);
 ```
 
-Draw attention to a particular line of code.
+## Type Safety & Error Handling in Action
 
-```js {4} showLineNumbers
-import { useFloating } from "@floating-ui/react";
+Typed Storage catches type mismatches at compile time, preventing common data-related bugs before your code even runs.
 
-function MyComponent() {
-  const { refs, floatingStyles } = useFloating();
-
-  return (
-    <>
-      <div ref={refs.setReference} />
-      <div ref={refs.setFloating} style={floatingStyles} />
-    </>
-  );
-}
+```ts
+// TypeScript will catch type mismatches during development
+typedStorage.users.insert({
+  id: "not-a-number", // string instead of number
+  name: "Alice",
+  email: "alice@example.com",
+});
+// Error : Type 'string' is not assignable to type 'number'
 ```
 
-## Word Highlighting
-
-Draw attention to a particular word or series of characters.
-
-````js /floatingStyles/
-import { useFloating } from "@floating-ui/react";
-
-function MyComponent() {
-  const { refs, floatingStyles } = useFloating();
-
-  return (
-    <>
-      <div ref={refs.setReference} />
-      <div ref={refs.setFloating} style={floatingStyles} />
-    </>
-  );
-}
+## useLiveStorage
 
 
-### Kitchen Sink Meta Strings
+useLiveStorage is custom hook for react users that listen to the query and 
+automatically rerneder the components hwn the data changed
+
+```ts
+const { data: users } = useLiveStorage(() =>
+  typedStorage.users.query().select({ id: true, name: true })
+);
+
+return (
+  <div>
+    {users.map((user) => (
+      <div key={user.id}>
+        <h2>{user.name}</h2>
+        <div>
+          <button
+            onClick={() => {
+              db.users.delete().where(equal({ id: user.id }));
+              // this will automatically rerender the comp without the deleted data
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+```

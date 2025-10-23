@@ -50,6 +50,19 @@ const blogComponents = getBlogMDXComponents({
       {children}
     </h2>
   ),
+  h3: ({ children }) => (
+    <h3
+      className="text-left! text-white"
+      style={{
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text",
+        backgroundImage: "linear-gradient(90deg,#7928CA,#FF0080)",
+      }}
+    >
+      {children}
+    </h3>
+  ),
   a: ({ children, href }) => (
     <a
       href={href}

@@ -1,6 +1,4 @@
 import nextra from "nextra";
-import { createHighlighter } from "shiki";
-import { transformerTwoslash } from "@shikijs/twoslash";
 
 const withNextra = nextra({
   defaultShowCopyCode: true,
@@ -9,17 +7,9 @@ const withNextra = nextra({
       theme: "dracula",
       keepBackground: true,
       defaultLang: "js",
-      // Create a custom highlighter that includes twoslash
-      onVisitHighlightedLine(node) {
-        node.properties.className = ["line"];
-      },
-      transformers: [
-        transformerTwoslash({
-          explicitTrigger: true,
-        })
-      ],
     },
   },
 });
 
-export default withNextra({});
+export default withNextra({
+});
