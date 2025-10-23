@@ -26,8 +26,8 @@ export default async function HomePage() {
 
         <div className="mb-12">
           <p className="text-lg text-gray-300 leading-relaxed max-w-2xl">
-            Most developers can't design. Most designers can't code. I do both.
-            3 years turning ideas into profitable products.
+            Passionate about TypeScript, Next.js, and modern web development.
+            Building scalable applications with clean code and innovative solutions.
           </p>
         </div>
       </section>
