@@ -65,7 +65,7 @@ const blogComponents = getBlogMDXComponents({
   ),
   a: ({ children, href }) => (
     <a
-      href={href}
+      href={typeof href === 'string' ? href : href?.toString()}
       className="text-amber-500! no-underline! transition-colors hover:text-blue-600!"
     >
       {children}
