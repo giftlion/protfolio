@@ -1,0 +1,156 @@
+---
+title: Typed Storage
+description: iv created a new lib named typed-storage heres how it works
+date: 2025-10-23
+published: true
+---
+
+## Why?
+
+Foe a while i wanted to learn how to create a type-safe api like [`trpc`](https://trpc.io/) etc it always make
+me facinating to see the type safe complition when you type the and then the type of your
+http request so i decided to create a similar api for using local storage.
+
+## How it work
+
+### Initiating the instance
+Well i knew that the first think i need to create a type-safe expirience is to define a schema
+and i didnt want to invent a new one so i decided to use the zod schema because every one already using
+it.
+
+```js {4} showLineNumbers
+import { createClient } from "@giftlion/typed-storage";
+import { z } from "zod";
+
+const schema = z.object({
+  users: z.object({
+    id: z.number(),
+    name: z.string(),
+    email: z.string(),
+    products: z.array(z.string()).optional(),
+  }),
+});
+
+const localStorage = createClient("my-sorage", { schema });
+```
+
+the first argumet its just a uniqe string it you want to create more instaces.
+
+### Crud
+
+and thats pretty mush all the cong you have to do right know you can just use it
+
+```typescript twoslash
+// @errors: 2540
+
+// Insert
+db.users.insert({ id: 1, name: "Alice", email: "alice@example.com" });
+
+// Query all
+const { data: users } = db.users.query();
+//             ^|
+
+// Query with filter
+const { data: activeUsers } = db.users
+  .query()
+  .where((user) => user.id > 10);
+
+// Query with select
+const { data: emails } = db.users
+  .query()
+  .select({ email: true });
+
+// Chain where and select
+const { data: filtered } = db.users
+  .query()
+  .where((user) => user.name.includes("Alice"))
+  .select({ name: true, email: true });
+
+// Update
+db.users.update().where((user) => user.id === 1, { name: "Alice Updated" });
+
+// Delete
+db.users.delete().where((user) => user.id === 1);
+```
+
+### Type Safety & Error Handling
+
+```ts
+// TypeScript will catch type mismatches
+db.users.insert({ 
+  id: "not-a-number", // ❌ Error: Type 'string' is not assignable to type 'number'
+  name: "Alice", 
+  email: "alice@example.com" 
+});
+
+// ✅ Correct usage
+db.users.insert({ 
+  id: 1, // ✅ Correct: number type
+  name: "Alice", 
+  email: "alice@example.com" 
+});
+```
+
+### Type Safety Examples
+
+```ts
+// Type-safe queries
+const users = db.users.query();
+const filtered = db.users.query().where((user) => user.id > 5);
+const selected = db.users.query().select({ name: true, email: true });
+```
+
+### Valid Usage
+
+```ts
+// ✅ Correct usage with full type safety
+const validUser = {
+  id: 1,
+  name: "Alice",
+  email: "alice@example.com"
+};
+
+// Type-safe query with method chaining
+const result = db.users
+  .query()
+  .where((user) => user.name.includes("Alice"))
+  .select({ name: true, email: true });
+```
+
+Draw attention to a particular line of code.
+
+```js {4} showLineNumbers
+import { useFloating } from "@floating-ui/react";
+
+function MyComponent() {
+  const { refs, floatingStyles } = useFloating();
+
+  return (
+    <>
+      <div ref={refs.setReference} />
+      <div ref={refs.setFloating} style={floatingStyles} />
+    </>
+  );
+}
+```
+
+## Word Highlighting
+
+Draw attention to a particular word or series of characters.
+
+````js /floatingStyles/
+import { useFloating } from "@floating-ui/react";
+
+function MyComponent() {
+  const { refs, floatingStyles } = useFloating();
+
+  return (
+    <>
+      <div ref={refs.setReference} />
+      <div ref={refs.setFloating} style={floatingStyles} />
+    </>
+  );
+}
+
+
+### Kitchen Sink Meta Strings
